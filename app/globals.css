@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────
+   BalanX design tokens — Fintech/Crypto (Glassmorphism + Dark OLED)
+   Dark is the default (no class); `.light` on <html> overrides.
+   Palette from design-system/balanx/MASTER.md:
+   gold trust #F59E0B + purple tech #8B5CF6 on deep navy #0F172A
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* dark (default) — Fintech/Crypto: blue trust + green growth on deep navy */
+  --bg: #0f172a;
+  --bg-deep: #0b1120;
+  --fg: #f8fafc;
+  --fg-muted: #94a3b8;
+  --fg-soft: #64748b;
+  --primary: #3b82f6;
+  --primary-strong: #60a5fa;
+  --accent: #06b6d4;
+  --accent-soft: #22d3ee;
+  --success: #22c55e;
+  --destructive: #ef4444;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+  --card-bg: rgba(255, 255, 255, 0.045);
+  --card-bg-strong: rgba(255, 255, 255, 0.07);
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --overlay: rgba(2, 6, 23, 0.72);
+  --glass-blur: 20px;
+  --popover-bg: rgba(30, 41, 59, 0.98);
+  --grad-brand: linear-gradient(135deg, #60a5fa 0%, #3b82f6 55%, #2563eb 100%);
+  --grad-green: linear-gradient(135deg, #34d399 0%, #22c55e 60%, #16a34a 100%);
+}
+
+html.light {
+  --bg: #eef2f7;
+  --bg-deep: #e2e8f0;
+  --fg: #0f172a;
+  --fg-muted: #475569;
+  --fg-soft: #64748b;
+  --primary: #2563eb;
+  --primary-strong: #1d4ed8;
+  --accent: #0891b2;
+  --accent-soft: #06b6d4;
+  --success: #16a34a;
+  --destructive: #dc2626;
+  --line: rgba(15, 23, 42, 0.1);
+  --line-strong: rgba(15, 23, 42, 0.2);
+  --card-bg: rgba(255, 255, 255, 0.62);
+  --card-bg-strong: rgba(255, 255, 255, 0.82);
+  --input-bg: rgba(255, 255, 255, 0.7);
+  --overlay: rgba(15, 23, 42, 0.45);
+  --popover-bg: rgba(255, 255, 255, 0.98);
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-soft: var(--fg-soft);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-cardbg: var(--card-bg);
+  --color-inputbg: var(--input-bg);
+  --font-display: var(--font-orbitron), ui-sans-serif, system-ui;
+  --font-body: var(--font-exo), ui-sans-serif, system-ui;
+  --font-num: var(--font-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  transition: background-color 250ms ease, color 250ms ease;
+}
+
+/* ambient gradient blobs behind everything — blue + green */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  background:
+    radial-gradient(42rem 42rem at 12% -8%, rgba(59, 130, 246, 0.16), transparent 60%),
+    radial-gradient(50rem 50rem at 92% 108%, rgba(34, 197, 94, 0.12), transparent 62%),
+    radial-gradient(30rem 30rem at 70% 8%, rgba(6, 182, 212, 0.08), transparent 60%);
+  transition: opacity 250ms ease;
+}
+html.light .ambient {
+  opacity: 0.55;
+}
+
+/* glassmorphism primitives */
+.glass {
+  background: var(--card-bg);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.glass-strong {
+  background: var(--card-bg-strong);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* popover / dropdown surfaces: near-solid so content underneath never
+   bleeds through — pure glass is illegible for floating lists */
+.popover {
+  background: var(--popover-bg);
+  border: 1px solid var(--line-strong);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.45);
+}
+
+.brand-text {
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* number styling: tabular figures via mono font */
+.num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 8px;
+  border: 2px solid var(--bg);
+}
+
+/* recharts tweaks */
+.recharts-cartesian-axis-tick text { fill: var(--fg-soft); font-size: 11px; }
+.recharts-tooltip-cursor { fill: rgba(139, 92, 246, 0.08); }
+
+@keyframes float-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.float-in { animation: float-in 380ms ease both; }
