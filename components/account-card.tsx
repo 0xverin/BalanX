@@ -35,7 +35,11 @@ export function AccountCard({
 
   const platform = platformById[account.platform];
   const isDex = platform.kind === "dex";
-  const tokens = account.tokens?.filter((tk) => !(filterRiskTokens && tk.isRiskToken)) ?? [];
+  // hide dust: risk tokens (per setting) and anything worth under $1
+  const tokens =
+    account.tokens?.filter(
+      (tk) => !(filterRiskTokens && tk.isRiskToken) && tk.usd >= 1
+    ) ?? [];
   const maxTokenUsd = Math.max(...tokens.map((tk) => tk.usd), 1);
   const maxTypeUsd = Math.max(...(account.typeSubtotals ?? []).map((s) => s.usd), 1);
 

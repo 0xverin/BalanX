@@ -42,7 +42,7 @@ export type FetchBalance = (
 ) => Promise<BalanceResult>;
 
 export interface SerializedState {
-  version: 1;
+  version: typeof STATE_VERSION;
   exportedAt: string;
   accounts: Account[];
   snapshots: Snapshot[];
