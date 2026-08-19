@@ -10,7 +10,9 @@ import { relayBase } from "./relay";
 
 const HOST = "api.bitget.com";
 
-const FUTURES_TYPES = ["umcbl", "cmcbl", "dmcbl"] as const;
+// /api/v2/mix/account/accounts accepts only these productType values
+// (USDC-M "cmcbl" is rejected with 40020 on this endpoint).
+const FUTURES_TYPES = ["umcbl", "dmcbl"] as const;
 type FuturesType = (typeof FUTURES_TYPES)[number];
 
 async function signB64(secret: string, data: string): Promise<string> {
@@ -96,7 +98,7 @@ export function aggregateBitget(
   const coin = (rows: FuturesRow[]) =>
     rows.reduce((s, a) => s + Number(a.equity ?? 0) * priceOf(a.coin ?? ""), 0);
 
-  const futuresUsd = usd(futures.umcbl) + usd(futures.cmcbl) + coin(futures.dmcbl);
+  const futuresUsd = usd(futures.umcbl) + coin(futures.dmcbl);
 
   const typeSubtotals: BalanceSubtotal[] = [
     { type: "spot", usd: Math.round(spotUsd * 100) / 100 },
@@ -121,7 +123,7 @@ export async function bitgetFetchBalance(account: Account): Promise<BalanceResul
       signedGet(cred, "/api/v2/mix/account/accounts", `productType=${pt}`)
     )
   )) as unknown as [FuturesRow[], FuturesRow[], FuturesRow[]];
-  const byType: FuturesByType = { umcbl: futures[0], cmcbl: futures[1], dmcbl: futures[2] };
+  const byType: FuturesByType = { umcbl: futures[0], dmcbl: futures[1] };
 
   const assets = [
     ...new Set([
