@@ -1,51 +1,37 @@
 <p align="center">
   <h1 align="center">BalanX 💸</h1>
-  <p align="center"><b>跨 CEX/DEX 余额监控</b> —— 一个页面实时查看你在 **9 个平台**的 **USD 资产总值**。</p>
+  <p align="center"><b>跨 CEX/DEX 余额监控</b> —— 一个页面查看你的 **USD 资产总值**。</p>
 </p>
 
 <p align="center">
   <a href="./README.md">English</a>
 </p>
 
-
 ---
 
-## ✨ 功能特性 <a id="env"></a>
+## ✨ 功能特性
 
-- [x] 📊 实时汇总 **9 个平台**的 **USD 总资产** —— OKX Dex、Hyperliquid、OKX CEX、Binance、Bybit、Gate、Bitget、KuCoin、Aster
-- [x] 🧮 每平台全量口径：现货 / 资金 / 杠杆 / 理财 / 合约（含未实现盈亏），自家上架的长尾币按自家行情计价
-- [x] 📈 **30 天资产走势图**，UTC+8 每日快照（手动 + 每日自动）
-- [x] 🏷️ 真实平台 logo 与逐类型余额拆分
-- [x] 🔄 一键刷新，单账户失败隔离
-- [x] 🔒 **无数据库、无登录**，所有数据只存你的浏览器 localStorage
-- [x] 💾 导出 / 导入 JSON 备份
-- [x] 🌍 中英双语界面
-- [x] 🧩 注册表驱动，新增平台只需一行配置
+支持查询以下交易所的**总资产（USD）**：
 
-## 🚀 快速开始 <a id="quick-start"></a>
+**OKX Dex · Hyperliquid · OKX CEX · Binance · Bybit · Gate · Bitget · KuCoin · Aster**
+
+## 🚀 快速开始
 
 ```bash
 npm install
 npm run dev     # → http://localhost:3000
 ```
 
-## 🔑 配置 / key 从哪来
-
-只有 **OKX Dex** 需要配置 key，其他平台都在页面「添加账户」时输入。
+如果本地运行并且需要查询 **DEX** 的资产，请从 OKX 申请 key → **https://web3.okx.com/onchainos/dev-portal**，然后配置到环境变量：
 
 ```bash
 cp .env.example .env.local
 # 填入 OKX_DEX_API_KEY / OKX_DEX_SECRET / OKX_DEX_PASSPHRASE
 ```
 
-去 **OKX OnchainOS 开发者门户** → **https://web3.okx.com/onchainos/dev-portal** 创建 API key，得到**三件套（API Key + Secret Key + Passphrase）**后填入。
+## 🔒 Key 安全
 
-> ⚠️ passphrase 若含 `#` `!`，必须用双引号包裹，否则会被截断（OKX 报 50105）。
+- **所有 key 都不会存储到服务器** —— 只存在你浏览器的 localStorage。
+- 请确保你的 key 只有**只读**功能，没有交易/提现等权限。
 
-其他平台的 key 无需预配置：在「添加账户」表单里填对应平台的 API key 即可（建议只开**只读**权限）。
-
-## 🛡️ Key 安全 <a id="security"></a>
-
-- **所有账户 key 只存在你浏览器 localStorage** —— 不上传、不存储到任何服务器/数据库，也不写进代码仓库。
-- **例外**：OKX Dex 的 OnchainOS key 存于**你自己配的服务端环境变量**（`OKX_DEX_*`），由中继服务端签名——唯一放在服务端的 key，git 已忽略、绝不入库。
-- 被 CORS 拦截平台的请求经**无状态中继**转发：签名在**你的浏览器**完成，**secret key 从不出客户端**；中继不存储任何数据。
+> 说明：OKX Dex 的 OnchainOS key 存于你自己配的服务端环境变量（唯一放在服务端的一个），git 已忽略、绝不入库。

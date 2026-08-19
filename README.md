@@ -1,51 +1,37 @@
 <p align="center">
   <h1 align="center">BalanX 💸</h1>
-  <p align="center"><b>Cross-exchange balance monitor</b> — the real-time <b>USD value</b> of all your crypto, across 9 exchanges, in one page.</p>
+  <p align="center"><b>Cross-exchange balance monitor</b> — the real-time <b>USD value</b> of all your crypto, in one page.</p>
 </p>
 
 <p align="center">
   <a href="./README.zh.md">中文</a>
 </p>
 
-
 ---
 
-## ✨ Features <a id="features"></a>
+## ✨ Features
 
-- [x] 📊 Real-time **USD total** across **9 exchanges** — OKX Dex, Hyperliquid, OKX CEX, Binance, Bybit, Gate, Bitget, KuCoin, Aster
-- [x] 🧮 Full balance scope per exchange — spot / funding / margin / earn / futures (incl. unrealized PnL), exchange-exclusive tokens priced via their own market
-- [x] 📈 **30-day portfolio chart** with UTC+8 daily snapshots (manual + daily auto)
-- [x] 🏷️ Accurate platform logos & per-platform balance breakouts
-- [x] 🔄 One-click refresh with per-account error isolation
-- [x] 🔒 **No database, no login** — all data stays in your browser's localStorage
-- [x] 💾 Export / import JSON backup
-- [x] 🌍 EN / 中文 bilingual UI
-- [x] 🧩 Registry-driven — add a new exchange with one config entry
+Queries the **total assets (USD)** of the following exchanges:
 
-## 🚀 Quick start <a id="quick-start"></a>
+**OKX Dex · Hyperliquid · OKX CEX · Binance · Bybit · Gate · Bitget · KuCoin · Aster**
+
+## 🚀 Quick start
 
 ```bash
 npm install
 npm run dev     # → http://localhost:3000
 ```
 
-## 🔑 Configuration / where the key comes from
-
-Only **OKX Dex** needs a configured key; every other exchange's key is entered in the **Add account** form.
+To query **DEX** assets locally, apply for an **OKX OnchainOS API key** from OKX → **https://web3.okx.com/onchainos/dev-portal**, then configure it in the environment:
 
 ```bash
 cp .env.example .env.local
-# fill OKX_DEX_API_KEY / OKX_DEX_SECRET / OKX_DEX_PASSPHRASE
+# fill in OKX_DEX_API_KEY / OKX_DEX_SECRET / OKX_DEX_PASSPHRASE
 ```
 
-Get the **three-part key** (API Key + Secret Key + Passphrase) from the **OKX OnchainOS dev portal** → **https://web3.okx.com/onchainos/dev-portal** and fill them in.
+## 🔒 Key security
 
-> ⚠️ Wrap the passphrase in double quotes if it contains `#` / `!`, otherwise it is truncated (OKX error 50105).
+- **All keys are never stored on the server** — they live only in your browser's localStorage.
+- Make sure your exchange API keys have **read-only** permission only — no trading / withdrawal access.
 
-Other exchanges need no setup — just enter each exchange's API key in the **Add account** form (read-only permission recommended).
-
-## 🛡️ Key security <a id="security"></a>
-
-- **All account keys live only in your browser's localStorage** — never uploaded to, or stored on, any server, database, or in the code repo.
-- **Exception**: the OKX Dex OnchainOS key goes in **your own server env** (`OKX_DEX_*`) for server-side signing — the only server-side key; it's git-ignored and never committed.
-- Requests to CORS-blocked exchanges go through a **stateless relay**: signing happens **in your browser**, so the **secret never leaves your client**; the relay stores nothing.
+> Note: the OKX Dex OnchainOS key is kept in your own server environment (the one server-side case), git-ignored and never committed.
