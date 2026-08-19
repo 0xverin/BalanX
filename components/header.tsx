@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useT, type Lang } from "@/lib/i18n-provider";
 import { GlobeIcon, MoonIcon, SettingsIcon, SunIcon } from "./icons";
 import { Button } from "./ui";
@@ -53,6 +54,12 @@ export function Header({
             </button>
           </div>
 
+          <Link
+            href="/docs"
+            className="hidden items-center rounded-xl border border-line bg-inputbg px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:text-fg hover:border-line-strong sm:inline-flex"
+          >
+            {t.docs}
+          </Link>
           <Button variant="ghost" onClick={onToggleTheme} aria-label="Toggle theme" className="px-2.5">
             {dark ? <SunIcon size={17} /> : <MoonIcon size={17} />}
           </Button>
