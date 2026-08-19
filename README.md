@@ -7,14 +7,6 @@
   <a href="./README.zh.md">中文</a>
 </p>
 
-<p align="center">
-  [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-  [![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-  [![Platform](https://img.shields.io/badge/platform-Web-lightgrey.svg)](https://github.com/0xverin/BalanX)
-  [![GitHub stars](https://img.shields.io/github/stars/0xverin/BalanX.svg?style=social)](https://github.com/0xverin/BalanX)
-  [![License](https://img.shields.io/github/license/0xverin/BalanX)](https://github.com/0xverin/BalanX)
-</p>
 
 ---
 
@@ -57,9 +49,3 @@ Other exchanges need no setup — just enter each exchange's API key in the **Ad
 - **All account keys live only in your browser's localStorage** — never uploaded to, or stored on, any server, database, or in the code repo.
 - **Exception**: the OKX Dex OnchainOS key goes in **your own server env** (`OKX_DEX_*`) for server-side signing — the only server-side key; it's git-ignored and never committed.
 - Requests to CORS-blocked exchanges go through a **stateless relay**: signing happens **in your browser**, so the **secret never leaves your client**; the relay stores nothing.
-
-## ⭐ Star History
-
-<a href="https://github.com/0xverin/BalanX/stargazers">
-  <img src="https://api.star-history.com/svg?repos=0xverin/BalanX&type=Date" width="600" alt="Star history chart">
-</a>
