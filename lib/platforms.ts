@@ -47,7 +47,7 @@ export const PLATFORMS: PlatformMeta[] = [
   {
     id: "hyperliquid",
     nameKey: "hyperliquid",
-    brandColor: "#F9BD29",
+    brandColor: "#50D2C1",
     logoKey: "hyperliquid",
     kind: "dex",
     status: "supported",
@@ -80,7 +80,7 @@ export const PLATFORMS: PlatformMeta[] = [
   {
     id: "bybit",
     nameKey: "bybit",
-    brandColor: "#F7C600",
+    brandColor: "#F6A500",
     logoKey: "bybit",
     kind: "cex",
     status: "supported",
@@ -91,7 +91,7 @@ export const PLATFORMS: PlatformMeta[] = [
   {
     id: "gate",
     nameKey: "gate",
-    brandColor: "#1E6FFF",
+    brandColor: "#2354E6",
     logoKey: "gate",
     kind: "cex",
     status: "supported",
@@ -102,7 +102,7 @@ export const PLATFORMS: PlatformMeta[] = [
   {
     id: "bitget",
     nameKey: "bitget",
-    brandColor: "#05EE78",
+    brandColor: "#00F0FF",
     logoKey: "bitget",
     kind: "cex",
     status: "supported",
@@ -113,7 +113,7 @@ export const PLATFORMS: PlatformMeta[] = [
   {
     id: "kucoin",
     nameKey: "kucoin",
-    brandColor: "#01BC8D",
+    brandColor: "#23AF91",
     logoKey: "kucoin",
     kind: "cex",
     status: "supported",
