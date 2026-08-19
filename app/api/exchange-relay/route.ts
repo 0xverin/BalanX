@@ -152,7 +152,16 @@ export async function POST(request: Request): Promise<NextResponse> {
     const secret = process.env.OKX_DEX_SECRET;
     const passphrase = process.env.OKX_DEX_PASSPHRASE;
     if (!apiKey || !secret || !passphrase) {
-      return relayError(503, "OKX Dex credentials not configured on the server");
+      const missing = [
+        !apiKey && "OKX_DEX_API_KEY",
+        !secret && "OKX_DEX_SECRET",
+        !passphrase && "OKX_DEX_PASSPHRASE",
+      ].filter(Boolean).join(", ");
+      console.error(
+        `[balanx-relay] server-signed blocked: missing env ${missing} — ` +
+        "set these Vercel env vars (Production scope) and redeploy."
+      );
+      return relayError(503, `OKX Dex credentials not configured on the server (missing: ${missing})`);
     }
     const timestamp = new Date().toISOString();
     const sign = await okxSign(secret, timestamp, r.method, r.path);
