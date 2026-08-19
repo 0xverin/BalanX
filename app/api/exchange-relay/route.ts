@@ -41,6 +41,7 @@ const RELAY = {
     paths: [
       "/api/v2/spot/account/assets",
       "/api/v2/mix/account/accounts",
+      "/api/v2/spot/market/tickers",
     ],
   },
   kucoin: {

@@ -13,9 +13,9 @@ describe("aggregateBitget", () => {
     const out = aggregateBitget(
       spot,
       {
-        umcbl: [{ coin: "USDT", equity: "500", usdtEquity: "500" }],
-        cmcbl: [{ coin: "USDC", equity: "300", usdtEquity: "300" }],
-        dmcbl: [{ coin: "BTC", equity: "0.01" }], // coin-M → equity × price
+        "USDT-FUTURES": [{ coin: "USDT", equity: "500", usdtEquity: "500" }],
+        "USDC-FUTURES": [{ coin: "USDC", equity: "300", usdtEquity: "300" }],
+        "COIN-FUTURES": [{ coin: "BTC", equity: "0.01" }], // coin-M → equity × price
       },
       priceOf
     );
@@ -25,7 +25,7 @@ describe("aggregateBitget", () => {
   });
 
   it("handles accounts with no futures (all empty)", () => {
-    const out = aggregateBitget(spot, { umcbl: [], cmcbl: [], dmcbl: [] }, priceOf);
+    const out = aggregateBitget(spot, { "USDT-FUTURES": [], "USDC-FUTURES": [], "COIN-FUTURES": [] }, priceOf);
     expect(out.totalValue).toBeCloseTo(6100, 0);
     expect(out.typeSubtotals.find((t) => t.type === "futures")?.usd).toBe(0);
   });

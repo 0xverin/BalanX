@@ -1,7 +1,9 @@
 // Bitget v2 adapter — browser-signed via the stateless relay (CORS blocked).
 // Signature: Base64(HMAC-SHA256(timestamp + method + requestPath + body), secret).
-// Spot + futures across ALL product types (USDT-M umcbl, USDC-M cmcbl, COIN-M
-// dmcbl), consistent with the Binance full-scope approach.
+// Spot + futures. NOTE: v2 productType enum is UPPERCASE (USDT-FUTURES /
+// COIN-FUTURES / USDC-FUTURES) — the v1-style "umcbl/dmcbl" values are rejected
+// with 40020. Spot long-tail tokens (e.g. BTW) are priced via Bitget's own
+// public spot ticker, since Binance/OKX don't list them.
 
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
@@ -10,11 +12,7 @@ import { relayBase } from "./relay";
 
 const HOST = "api.bitget.com";
 
-// Query every Bitget futures product type (USDT-M / USDC-M / COIN-M).
-// An endpoint or account that doesn't support a type rejects it with
-// 40020 "Parameter productType error" — we skip that type, not the whole
-// account, so whichever types the account has still get counted.
-const FUTURES_TYPES = ["umcbl", "cmcbl", "dmcbl"] as const;
+const FUTURES_TYPES = ["USDT-FUTURES", "COIN-FUTURES", "USDC-FUTURES"] as const;
 type FuturesType = (typeof FUTURES_TYPES)[number];
 
 async function signB64(secret: string, data: string): Promise<string> {
@@ -73,15 +71,18 @@ export interface FuturesRow {
   coin?: string;
   equity?: string;
   usdtEquity?: string;
+  accountEquity?: string;
 }
 
 export type FuturesByType = Record<FuturesType, FuturesRow[]>;
 
+const coinValue = (a: FuturesRow, priceOf: (c: string) => number) =>
+  Number(a.usdtEquity ?? a.equity ?? a.accountEquity ?? 0) *
+    (a.usdtEquity || a.accountEquity ? 1 : priceOf(a.coin ?? ""));
 
 /**
  * Aggregate Bitget (pure seam): spot USD + futures USD across all product
- * types. USDT-M / USDC-M use `usdtEquity` (already USDT-converted) with
- * `equity` fallback; COIN-M multiplies coin equity by its USD price.
+ * types. USDT/USDC-M use their USDT equity; COIN-M multiplies coin equity.
  */
 export function aggregateBitget(
   spot: SpotRow[],
@@ -92,15 +93,10 @@ export function aggregateBitget(
     (s, a) => s + (+a.available + +a.frozen + Number(a.locked ?? 0)) * priceOf(a.coin),
     0
   );
-  const usd = (rows: FuturesRow[]) =>
-    rows.reduce(
-      (s, a) => s + Number(a.usdtEquity ?? a.equity ?? 0) * (a.usdtEquity ? 1 : priceOf(a.coin ?? "")),
-      0
-    );
-  const coin = (rows: FuturesRow[]) =>
-    rows.reduce((s, a) => s + Number(a.equity ?? 0) * priceOf(a.coin ?? ""), 0);
-
-  const futuresUsd = usd(futures.umcbl) + usd(futures.cmcbl) + coin(futures.dmcbl);
+  const futuresUsd =
+    futures["USDT-FUTURES"].reduce((s, a) => s + coinValue(a, priceOf), 0) +
+    futures["USDC-FUTURES"].reduce((s, a) => s + coinValue(a, priceOf), 0) +
+    futures["COIN-FUTURES"].reduce((s, a) => s + coinValue(a, priceOf), 0);
 
   const typeSubtotals: BalanceSubtotal[] = [
     { type: "spot", usd: Math.round(spotUsd * 100) / 100 },
@@ -112,23 +108,52 @@ export function aggregateBitget(
   };
 }
 
-/** Fetch real Bitget balances: spot + futures (USDT-M / USDC-M / COIN-M). */
+/**
+ * Price long-tail spot assets via Bitget's public spot ticker (routed through
+ * the relay so browser CORS is irrelevant), filling gaps the generic pricing
+ * couldn't cover — e.g. BTW, a BEP-20 token not listed on the price sources.
+ */
+async function priceSpotTail(
+  spot: SpotRow[],
+  prices: Record<string, number>,
+  cred: Credential
+): Promise<void> {
+  for (const a of spot) {
+    if (prices[a.coin]) continue;
+    try {
+      const data = (await signedGet(
+        cred,
+        "/api/v2/spot/market/tickers",
+        `symbol=${a.coin.toUpperCase()}USDT`
+      )) as Array<{ lastPr?: string }>;
+      const last = Number(data?.[0]?.lastPr);
+      if (Number.isFinite(last) && last > 0) prices[a.coin] = last;
+    } catch {
+      /* not listed / no price — stays unpriced */
+    }
+  }
+}
+
+/** Fetch real Bitget balances: spot + futures (USDT/USDC/COIN-M). */
 export async function bitgetFetchBalance(account: Account): Promise<BalanceResult> {
   const cred = account.credentials as Credential | undefined;
   if (!cred) throw new Error("Missing Bitget credentials");
 
   const spot = (await signedGet(cred, "/api/v2/spot/account/assets")) as SpotRow[];
 
-  // Query every futures product type; skip the ones Bitget rejects with a
-  // productType error, surface any other (real) failure.
+  // futures: skip product types Bitget rejects with a "productType" error
   const isProductTypeError = (e: unknown) =>
     e instanceof Error && (e.message.includes("productType") || e.message.includes("40020"));
-  const byType: FuturesByType = { umcbl: [], cmcbl: [], dmcbl: [] };
+  const byType: FuturesByType = { "USDT-FUTURES": [], "COIN-FUTURES": [], "USDC-FUTURES": [] };
   for (const pt of FUTURES_TYPES) {
     try {
-      byType[pt] = (await signedGet(cred, "/api/v2/mix/account/accounts", `productType=${pt}`)) as FuturesRow[];
+      byType[pt] = (await signedGet(
+        cred,
+        "/api/v2/mix/account/accounts",
+        `productType=${pt}`
+      )) as FuturesRow[];
     } catch (e) {
-      if (isProductTypeError(e)) continue; // unsupported type for this account — skip
+      if (isProductTypeError(e)) continue;
       throw e;
     }
   }
@@ -140,6 +165,7 @@ export async function bitgetFetchBalance(account: Account): Promise<BalanceResul
     ].filter(Boolean)),
   ];
   const prices = await fetchUsdPrices(assets);
+  await priceSpotTail(spot, prices, cred); // long-tail spot tokens via Bitget ticker
   const priceOf = (c: string) => prices[c] ?? 0;
 
   return aggregateBitget(spot, byType, priceOf);
