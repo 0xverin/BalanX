@@ -1,17 +1,19 @@
 # BalanX — CEX/DEX Balance Monitor
 
-View the real-time **USD value** of your assets across **9 exchanges** (OKX Dex, Hyperliquid, OKX CEX, Binance, Bybit, Gate, Bitget, KuCoin, Aster) in one page. Pure frontend — **no database, no login**; all data stays in your browser.
+**中文**：[README 中文版](README.zh.md)
 
-> Full bilingual documentation (中文 / English, switchable in the page header) is available inside the app at **`/docs`** → run `npm run dev` and open `http://localhost:3000/docs`.
+---
+
+View the real-time **USD value** of your assets across **9 exchanges** (OKX Dex, Hyperliquid, OKX CEX, Binance, Bybit, Gate, Bitget, KuCoin, Aster) in one page. Pure frontend — **no database, no login**; all data stays in your browser.
 
 ## Quick start
 
 ```bash
 npm install
-npm run dev     # → http://localhost:3000  (docs: /docs)
+npm run dev     # → http://localhost:3000
 ```
 
-## Local setup
+## What to configure locally / where the key comes from
 
 Only **OKX Dex** needs a configured key; every other exchange's key is entered in the "Add account" form.
 
@@ -20,12 +22,14 @@ cp .env.example .env.local
 # fill OKX_DEX_API_KEY / OKX_DEX_SECRET / OKX_DEX_PASSPHRASE
 ```
 
-The three-part key comes from the **OKX OnchainOS dev portal**: **https://web3.okx.com/onchainos/dev-portal**.
+Get the **three-part key** (API Key + Secret Key + Passphrase) from the **OKX OnchainOS dev portal** → **https://web3.okx.com/onchainos/dev-portal** and fill them in.
 
-> ⚠️ In `.env.local`, wrap the passphrase in double quotes if it contains `#` / `!` (otherwise it's truncated → OKX error 50105).
+> ⚠️ Wrap the passphrase in double quotes if it contains `#` / `!`, otherwise it is truncated (OKX error 50105).
+
+Other exchanges — no setup needed: just enter each exchange's API key in the "Add account" form (read-only permission recommended).
 
 ## Key security
 
-- **All account keys live only in your browser's localStorage** — never stored on any server, database, or in the code repo.
-- **Exception**: the OKX Dex OnchainOS key goes in **your own server env** (`OKX_DEX_*`) for server-side signing — the only server-side key; git-ignored, never committed.
-- Blocked-exchange requests go through a **stateless relay**: signing happens **in your browser**; the **secret never leaves your client**; the relay stores nothing.
+- **All account keys live only in your browser's localStorage** — never uploaded to, or stored on, any server, database, or in the code repo.
+- **Exception**: the OKX Dex OnchainOS key goes in **your own server env** (`OKX_DEX_*`) for server-side signing — the only server-side key; it's git-ignored and never committed.
+- Requests to CORS-blocked exchanges go through a **stateless relay**: signing happens **in your browser**, so the **secret never leaves your client**; the relay stores nothing.
