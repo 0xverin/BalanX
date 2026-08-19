@@ -35,14 +35,14 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-1 rounded-xl border border-line bg-inputbg p-1 sm:inline-flex">
+          <div className="inline-flex items-center gap-1 rounded-xl border border-line bg-inputbg p-1">
             <button
               onClick={() => onLang("en")}
               className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                 lang === "en" ? "bg-cardbg-strong text-fg border border-line-strong" : "text-muted hover:text-fg"
               }`}
             >
-              <GlobeIcon size={13} /> EN
+              <GlobeIcon size={13} /> English
             </button>
             <button
               onClick={() => onLang("zh")}
@@ -56,7 +56,7 @@ export function Header({
 
           <Link
             href="/docs"
-            className="hidden items-center rounded-xl border border-line bg-inputbg px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:text-fg hover:border-line-strong sm:inline-flex"
+            className="inline-flex items-center rounded-xl border border-line bg-inputbg px-3 py-1.5 text-sm font-semibold text-muted transition-colors hover:text-fg hover:border-line-strong"
           >
             {t.docs}
           </Link>
