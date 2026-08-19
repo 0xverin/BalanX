@@ -51,13 +51,17 @@ function DashboardInner({
   // empty/dark baseline, so server HTML and the first client render match (no
   // React hydration mismatch #418). Restoring a persisted portfolio/theme is
   // a post-hydration state update, not something the initializer can read.
+  // Hydrate from localStorage AFTER the first paint: SSR always renders the
+  // empty/dark baseline so server HTML and the first client render match (no
+  // React hydration mismatch #418). Reads + state updates run in a microtask
+  // so they're post-hydration, not synchronous in the render/effect path.
   useEffect(() => {
-    const saved = loadState();
-    if (saved) setState(saved);
-    const th = localStorage.getItem("balanx-theme");
-    if (th === "light") setDark(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHydrated(true);
+    queueMicrotask(() => {
+      const saved = loadState();
+      setHydrated(true);
+      if (saved) setState(saved);
+      if (localStorage.getItem("balanx-theme") === "light") setDark(false);
+    });
   }, []);
 
   // persist every portfolio change, but only after hydration completes (so the
