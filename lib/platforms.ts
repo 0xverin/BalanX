@@ -47,7 +47,7 @@ export const PLATFORMS: PlatformMeta[] = [
   {
     id: "hyperliquid",
     nameKey: "hyperliquid",
-    brandColor: "#6AF7E1",
+    brandColor: "#F9BD29",
     logoKey: "hyperliquid",
     kind: "dex",
     status: "supported",
@@ -124,7 +124,7 @@ export const PLATFORMS: PlatformMeta[] = [
   {
     id: "aster",
     nameKey: "aster",
-    brandColor: "#7C3AED",
+    brandColor: "#F4D5B1",
     logoKey: "aster",
     kind: "cex",
     status: "supported",
