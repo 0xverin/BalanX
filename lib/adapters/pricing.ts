@@ -16,17 +16,6 @@ async function binanceGet(path: string): Promise<unknown> {
   return json;
 }
 
-async function okxTicker(symbol: string): Promise<number | null> {
-  const res = await fetch(
-    `https://www.okx.com/api/v5/market/ticker?instId=${encodeURIComponent(symbol)}`
-  );
-  if (!res.ok) return null;
-  const json = (await res.json()) as { code?: string; data?: Array<{ last?: string }> };
-  if (json.code !== "0" || !json.data?.length) return null;
-  const last = Number(json.data[0].last);
-  return Number.isFinite(last) ? last : null;
-}
-
 const chunk = <T,>(arr: T[], size: number): T[][] =>
   Array.from({ length: Math.ceil(arr.length / size) }, (_, i) => arr.slice(i * size, i * size + size));
 
@@ -103,11 +92,59 @@ export async function fetchUsdPrices(assets: string[]): Promise<Record<string, n
     }
   }
 
-  // 3) OKX v5 ticker for anything still missing
+  // 3) Multi-platform public tickers for anything still missing (coins only
+  //    listed on one exchange, e.g. BTW on Bitget, long-tail on Bybit/Gate/KuCoin)
   for (const a of missing) {
-    const price = await okxTicker(`${a}-USDT`);
+    const price = await publicPrice(a);
     if (price !== null) prices[a] = price;
   }
 
   return prices;
+}
+
+/**
+ * Try public spot tickers across several exchanges to price a single asset.
+ * Covers tokens a user holds that only their own exchange lists (the generic
+ * Binance-first pricing misses those → they'd count as $0 otherwise).
+ */
+async function publicPrice(asset: string): Promise<number | null> {
+  const candidates: Array<{ url: string; last: (j: unknown) => number | null }> = [
+    // OKX v5 spot
+    {
+      url: `https://www.okx.com/api/v5/market/ticker?instId=${asset}-USDT`,
+      last: (j) => Number((j as { data?: Array<{ last?: string }> })?.data?.[0]?.last),
+    },
+    // Bybit v5 spot
+    {
+      url: `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${asset}USDT`,
+      last: (j) =>
+        Number((j as { result?: { list?: Array<{ lastPrice?: string }> } })?.result?.list?.[0]?.lastPrice),
+    },
+    // Gate v4 spot
+    {
+      url: `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${asset}_USDT`,
+      last: (j) => Number((j as Array<{ last?: string }>)?.[0]?.last),
+    },
+    // KuCoin v2 spot
+    {
+      url: `https://api.kucoin.com/api/v2/market/orderbook/level1?symbol=${asset}-USDT`,
+      last: (j) => Number((j as { data?: { price?: string } })?.data?.price),
+    },
+    // Bitget v2 spot
+    {
+      url: `https://api.bitget.com/api/v2/spot/market/tickers?symbol=${asset.toUpperCase()}USDT`,
+      last: (j) => Number((j as { data?: Array<{ lastPr?: string }> })?.data?.[0]?.lastPr),
+    },
+  ];
+  for (const c of candidates) {
+    try {
+      const res = await fetch(c.url);
+      if (!res.ok) continue;
+      const n = Number(c.last(await res.json()));
+      if (n > 0) return n;
+    } catch {
+      /* try next source */
+    }
+  }
+  return null;
 }
