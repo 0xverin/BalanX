@@ -123,3 +123,13 @@ BalanX —— 纯前端为主的跨 CEX/DEX 余额统计看板：用户添加账
 - 每日快照依赖页面打开（ADR-0001 代价）。
 - 新平台适配器以现有 Binance 适配器为模板（签名 → 多端点 → 聚合 → 计价）；Aster 为 Binance 系 API，直接复用签名逻辑。
 - 部署：Vercel env 需配置 `OKX_DEX_API_KEY/SECRET/PASSPHRASE`（README 有指引）。
+
+## 运营与部署事实（2026-08-19 追加）
+
+- **环境变量**：`OKX_DEX_API_KEY/SECRET/PASSPHRASE`（OnchainOS 三件套）存于 Vercel Env（Production 作用域）/ 本地 `.env.local`，git 忽略；申请地址 `https://web3.okx.com/onchainos/dev-portal`（README 已写明）。改 env 后必须重新部署。⚠️ `.env.local` 中 passphrase 含 `#` 必须加引号（否则被 dotenv 截断 → OKX 50105）。
+- **中继区域（Binance 地域封锁）**：Binance 按出站 IP 封地区；Vercel 默认函数区域（美国）被拒。正确做法 = Vercel → Settings → Functions → Region 设为 Tokyo `nrt1`（`vercel.json` 的 `functions.region` 不被 schema 支持，勿用）。换区域后重新部署。若所有 Vercel 区域均被封，用 `NEXT_PUBLIC_RELAY_URL` 把中继迁到自建实例。
+- **中继诊断**：`/api/diag` 返回中继出站 IP 与 Binance 可达性（200 放行 / 451 封）——排障地域问题用。
+- **`error` 字段不持久化**：账户的刷新错误是瞬时状态，`serializeState` 会剥掉它（避免刷新页面后残留旧报错；测试覆盖）。
+- **水合**：账户/主题从 localStorage 的恢复放在首帧后的微任务里，保证 SSR 基线一致（无 React #418）。
+- **活体验证状态**：Binance（经中继，含净值/未实现盈亏）✅、OKX Dex（服务端签名）✅、Hyperliquid（公开 API，需有账户的地址）✅、OKX CEX ⚠️ 需用户单独的 v5 桌面/APP API key（OnchainOS key 不通用）、Bybit/Gate/Bitget/KuCoin/Aster ⚠️ 待用户提供各平台 key 在 UI 验证。
+- **已知缺口**：KuCoin 合约需独立 futures key（现货 key 覆盖不到），当前 KuCoin 实现为现货+杠杆；Aster 现货为尽力而为；其余平台按接入表全量。

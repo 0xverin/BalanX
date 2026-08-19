@@ -4,7 +4,6 @@
 export type Lang = "en" | "zh";
 
 const en = {
-  appName: "BalanX",
   tagline: "Cross-exchange balance monitor",
   totalAssets: "Total Assets",
   vsYesterday: "vs yesterday",
@@ -34,7 +33,6 @@ const en = {
   aster: "Aster",
   comingSoon: "Coming soon",
   all: "All",
-  selectPlatform: "Select platform",
   envKeyHint: "Uses the server-side OKX Dex key — no key entry needed.",
   pubAddrHint: "Public address query — no API key needed.",
   accountName: "Account name",
@@ -45,8 +43,6 @@ const en = {
   walletAddress: "Wallet address",
   addWallet: "Add wallet",
   chains: "Chains",
-  eth: "Ethereum",
-  bsc: "BSC",
   cancel: "Cancel",
   save: "Save",
   settings: "Settings",
@@ -90,15 +86,10 @@ const en = {
   howBinanceDesc:
     "Create an API key in Binance with Read permission for Spot & Margin, Margin and Futures.",
   confirmDelete: "Delete account?",
-  confirmDeleteDesc:
-    "This account will no longer be tracked and its balance will be excluded from future snapshots.",
-  searchPh: "Search",
-  noResults: "No results",
   demoNotice: "Your keys stay in your browser — BalanX stores nothing",
 };
 
 const zh: Record<keyof typeof en, unknown> = {
-  appName: "BalanX",
   tagline: "跨交易所余额监控",
   totalAssets: "总资产",
   vsYesterday: "较昨日",
@@ -128,7 +119,6 @@ const zh: Record<keyof typeof en, unknown> = {
   aster: "Aster",
   comingSoon: "即将支持",
   all: "全部",
-  selectPlatform: "选择平台",
   envKeyHint: "使用服务端环境变量中的 OKX Dex key — 无需输入密钥。",
   pubAddrHint: "公开地址查询 — 无需 API key。",
   accountName: "账户名称",
@@ -139,8 +129,6 @@ const zh: Record<keyof typeof en, unknown> = {
   walletAddress: "钱包地址",
   addWallet: "添加钱包",
   chains: "链",
-  eth: "以太坊",
-  bsc: "BSC",
   cancel: "取消",
   save: "保存",
   settings: "设置",
@@ -182,9 +170,6 @@ const zh: Record<keyof typeof en, unknown> = {
   howBinance: "Binance 配置",
   howBinanceDesc: "在 Binance 创建 API Key，并开启现货&杠杆、杠杆、合约的读取权限。",
   confirmDelete: "删除账户？",
-  confirmDeleteDesc: "该账户将不再被统计，其余额也会从后续快照中移除。",
-  searchPh: "搜索",
-  noResults: "无结果",
   demoNotice: "密钥仅保存在你的浏览器 — BalanX 不存储任何数据",
 };
 
