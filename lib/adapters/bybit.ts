@@ -3,7 +3,7 @@
 
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
-import { fetchUsdPrices } from "./pricing";
+import { fetchUsdPrices, fillOwnPrices } from "./pricing";
 
 const BASE = "https://api.bybit.com";
 
@@ -70,6 +70,7 @@ export async function bybitFetchBalance(account: Account): Promise<BalanceResult
 
   const assets = [...new Set([...unified, ...fund].map((c) => c.coin).filter(Boolean))];
   const prices = await fetchUsdPrices(assets);
+  await fillOwnPrices(prices, assets, "bybit"); // own-exchange first
   const priceOf = (c: string) => prices[c] ?? 0;
 
   const unifiedUsd = sumUsd(unified, priceOf);

@@ -148,3 +148,55 @@ async function publicPrice(asset: string): Promise<number | null> {
   }
   return null;
 }
+
+// ── Own-exchange pricing (rule: price an asset using the exchange it's on) ──
+// Each CEX adapter prices its own holdings via that platform's public spot
+// ticker first (covers exchange-exclusive tokens like BTW on Bitget), with the
+// generic Binance/multi-source fallback for anything the platform doesn't list.
+
+export type OwnPlatform = "bybit" | "gate" | "kucoin" | "bitget";
+
+interface OwnTicker {
+  url: (asset: string) => string;
+  last: (json: unknown) => number | null;
+}
+
+export const OWN_TICKERS: Record<OwnPlatform, OwnTicker> = {
+  bybit: {
+    url: (a) => `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${a}USDT`,
+    last: (j) =>
+      Number((j as { result?: { list?: Array<{ lastPrice?: string }> } })?.result?.list?.[0]?.lastPrice) || null,
+  },
+  gate: {
+    url: (a) => `https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${a}_USDT`,
+    last: (j) => Number((j as Array<{ last?: string }>)?.[0]?.last) || null,
+  },
+  kucoin: {
+    url: (a) => `https://api.kucoin.com/api/v2/market/orderbook/level1?symbol=${a}-USDT`,
+    last: (j) => Number((j as { data?: { price?: string } })?.data?.price) || null,
+  },
+  bitget: {
+    url: (a) => `https://api.bitget.com/api/v2/spot/market/tickers?symbol=${a.toUpperCase()}USDT`,
+    last: (j) => Number((j as { data?: Array<{ lastPr?: string }> })?.data?.[0]?.lastPr) || null,
+  },
+};
+
+/** Fill prices for the given assets using a platform's own public spot ticker. */
+export async function fillOwnPrices(
+  prices: Record<string, number>,
+  assets: string[],
+  own: OwnPlatform
+): Promise<void> {
+  const t = OWN_TICKERS[own];
+  for (const a of assets) {
+    if (prices[a]) continue;
+    try {
+      const res = await fetch(t.url(a));
+      if (!res.ok) continue;
+      const v = t.last(await res.json());
+      if (v !== null && v > 0) prices[a] = v;
+    } catch {
+      /* skip — generic fallback below */
+    }
+  }
+}

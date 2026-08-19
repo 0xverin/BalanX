@@ -4,7 +4,7 @@
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
 import { relayBase } from "./relay";
-import { fetchUsdPrices } from "./pricing";
+import { fetchUsdPrices, fillOwnPrices } from "./pricing";
 
 const HOST = "api.gateio.ws";
 
@@ -74,6 +74,7 @@ export async function gateFetchBalance(account: Account): Promise<BalanceResult>
     ),
   ];
   const prices = await fetchUsdPrices(assets);
+  await fillOwnPrices(prices, assets, "gate"); // own-exchange first
   const priceOf = (c: string) => prices[c] ?? 0;
 
   const spotUsd = (spot as SpotAccount[]).reduce(

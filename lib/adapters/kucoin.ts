@@ -6,7 +6,7 @@
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
 import { relayBase } from "./relay";
-import { fetchUsdPrices } from "./pricing";
+import { fetchUsdPrices, fillOwnPrices } from "./pricing";
 
 const HOST = "api.kucoin.com";
 
@@ -73,6 +73,7 @@ export async function kucoinFetchBalance(account: Account): Promise<BalanceResul
   const rows = [...(main ?? []), ...(trade ?? [])];
   const assets = [...new Set(rows.map((a) => a.currency).filter(Boolean))];
   const prices = await fetchUsdPrices(assets);
+  await fillOwnPrices(prices, assets, "kucoin"); // own-exchange first
   const priceOf = (c: string) => prices[c] ?? 0;
 
   const spotUsd = rows.reduce((s, a) => s + +a.balance * priceOf(a.currency), 0);
