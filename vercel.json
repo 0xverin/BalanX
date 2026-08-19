@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "app/api/exchange-relay/route.ts": {
+      "region": "nrt1",
+      "maxDuration": 20
+    }
+  }
+}

@@ -65,3 +65,9 @@ Vercel 部署：Project → Settings → Environment Variables 添加同名三�
 npm test        # Vitest（portfolio 接缝 + 适配器纯函数 + 中继守卫）
 npm run build
 ```
+
+## Binance 地域限制（重要）
+
+Binance 会封禁部分地区的 API 访问（"Service unavailable from a restricted location"）。浏览器直连的平台不受影响，但 **Binance / Gate / Bitget / KuCoin / OKX Dex 的中继请求由 Vercel 服务器发出**，默认函数区域（常为美国）会被 Binance 拒绝。
+
+`vercel.json` 已把中继函数固定到 **东京 `nrt1`**。若仍被拒，改 `vercel.json` 里的 `region` 换区域并重新部署即可。可选：`hkg1`（香港）、`sin1`（新加坡）、`fra1`（法兰克福）等。
