@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="./README.zh.md">中文</a> · <a href="#features">Features</a> · <a href="#quick-start">Quick start</a> · <a href="#security">Security</a>
+  <a href="./README.zh.md">中文</a>
 </p>
 
 <p align="center">

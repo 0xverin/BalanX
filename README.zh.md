@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="./README.md">English</a> · <a href="#env">功能特性</a> · <a href="#quick-start">快速开始</a> · <a href="#security">Key 安全</a>
+  <a href="./README.md">English</a>
 </p>
 
 <p align="center">
