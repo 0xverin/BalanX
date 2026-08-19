@@ -40,19 +40,32 @@ function DashboardInner({
   onLang: (l: Lang) => void;
 }) {
   const t = useT();
-  const [dark, setDark] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem("balanx-theme") !== "light";
-  });
-  const [state, setState] = useState<PortfolioState>(() => loadState() ?? createEmptyState());
+  const [dark, setDark] = useState(true);
+  const [state, setState] = useState<PortfolioState>(createEmptyState);
+  const [hydrated, setHydrated] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // persist every portfolio change
+  // Hydrate from localStorage AFTER the first paint: SSR always renders the
+  // empty/dark baseline, so server HTML and the first client render match (no
+  // React hydration mismatch #418). Restoring a persisted portfolio/theme is
+  // a post-hydration state update, not something the initializer can read.
   useEffect(() => {
+    const saved = loadState();
+    if (saved) setState(saved);
+    const th = localStorage.getItem("balanx-theme");
+    if (th === "light") setDark(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setHydrated(true);
+  }, []);
+
+  // persist every portfolio change, but only after hydration completes (so the
+  // first empty render never overwrites saved data)
+  useEffect(() => {
+    if (!hydrated) return;
     saveState(state);
-  }, [state]);
+  }, [state, hydrated]);
 
   // keep <html> class in sync with the theme state (class is not React-controlled,
   // so no hydration mismatch; SSR renders dark by default)
