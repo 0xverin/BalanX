@@ -5,6 +5,7 @@
 
 import type { Account, TokenBalance } from "@/lib/types";
 import type { BalanceResult, FetchOptions } from "@/lib/portfolio";
+import { relayBase } from "./relay";
 
 /** Account chains → OKX chain ids (ETH=1, BSC=56). */
 export function chainsParam(chains: Account["chains"]): string {
@@ -87,12 +88,6 @@ export function mergeTokenLists(lists: TokenBalance[][]): TokenBalance[] {
     }
   }
   return [...byKey.values()].sort((a, b) => b.usd - a.usd);
-}
-
-function relayBase(): string {
-  return typeof window !== "undefined"
-    ? window.location.origin
-    : (process.env.BALANX_APP_URL ?? "");
 }
 
 async function relayGet(path: string): Promise<unknown> {

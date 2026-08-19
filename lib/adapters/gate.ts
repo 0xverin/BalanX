@@ -3,6 +3,7 @@
 
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
+import { relayBase } from "./relay";
 import { fetchUsdPrices } from "./pricing";
 
 const HOST = "api.gateio.ws";
@@ -17,12 +18,6 @@ async function hmacHex(secret: string, data: string): Promise<string> {
   );
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function relayBase(): string {
-  return typeof window !== "undefined"
-    ? window.location.origin
-    : (process.env.BALANX_APP_URL ?? "");
 }
 
 async function signedGet(cred: Credential, path: string): Promise<unknown> {

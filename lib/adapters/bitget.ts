@@ -3,6 +3,7 @@
 
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
+import { relayBase } from "./relay";
 import { fetchUsdPrices } from "./pricing";
 
 const HOST = "api.bitget.com";
@@ -17,12 +18,6 @@ async function signB64(secret: string, data: string): Promise<string> {
   );
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
   return btoa(String.fromCharCode(...new Uint8Array(sig)));
-}
-
-function relayBase(): string {
-  return typeof window !== "undefined"
-    ? window.location.origin
-    : (process.env.BALANX_APP_URL ?? "");
 }
 
 async function signedGet(

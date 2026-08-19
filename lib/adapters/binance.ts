@@ -4,6 +4,7 @@
 
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
+import { relayBase } from "./relay";
 import { fetchUsdPrices } from "./pricing";
 
 const HOST = {
@@ -41,12 +42,6 @@ export async function signedQuery(
 }
 
 /** Relay base: browser origin in the browser, env-configured in tests/node. */
-function relayBase(): string {
-  return typeof window !== "undefined"
-    ? window.location.origin
-    : (process.env.BALANX_APP_URL ?? "");
-}
-
 /**
  * Signed calls go through the stateless relay (Binance CORS blocks browser
  * requests carrying X-MBX-APIKEY). The signature is computed here in the
