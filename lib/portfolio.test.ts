@@ -245,6 +245,28 @@ describe("serialize / deserialize", () => {
     expect(restored?.filterRiskTokens).toBe(false);
   });
 
+  it("drops the transient error field but keeps credentials on persist", () => {
+    const s: PortfolioState = {
+      ...createEmptyState(),
+      accounts: [
+        okxAccount({
+          error: "Binance 0: Service unavailable from a restricted location",
+          credentials: { apiKey: "k", secretKey: "s" },
+        }),
+      ],
+    };
+    const serialized = serializeState(s);
+    expect(serialized.accounts[0]).not.toHaveProperty("error");
+    expect((serialized.accounts[0] as { credentials?: object }).credentials).toMatchObject({
+      apiKey: "k",
+      secretKey: "s",
+    });
+    // round-trip: still no stale error, credentials intact
+    const restored = deserializeState(serialized);
+    expect(restored?.accounts[0]).not.toHaveProperty("error");
+    expect((restored?.accounts[0] as { credentials?: { apiKey?: string } }).credentials?.apiKey).toBe("k");
+  });
+
   it("returns null for invalid or version-mismatched payloads", () => {
     expect(deserializeState(null)).toBeNull();
     expect(deserializeState({})).toBeNull();

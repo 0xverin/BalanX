@@ -155,7 +155,13 @@ export function serializeState(s: PortfolioState): SerializedState {
   return {
     version: STATE_VERSION,
     exportedAt: new Date().toISOString(),
-    accounts: s.accounts,
+    // drop the transient `error` field — a stale refresh error must not
+    // survive a reload and keep showing on the card
+    accounts: s.accounts.map((a) => {
+      const clean = { ...a };
+      delete (clean as { error?: string }).error;
+      return clean;
+    }),
     snapshots: s.snapshots,
     filter: s.filter,
     filterRiskTokens: s.filterRiskTokens,
