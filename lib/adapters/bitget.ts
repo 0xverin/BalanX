@@ -1,12 +1,17 @@
 // Bitget v2 adapter — browser-signed via the stateless relay (CORS blocked).
 // Signature: Base64(HMAC-SHA256(timestamp + method + requestPath + body), secret).
+// Spot + futures across ALL product types (USDT-M umcbl, USDC-M cmcbl, COIN-M
+// dmcbl), consistent with the Binance full-scope approach.
 
 import type { Account, BalanceSubtotal, Credential } from "@/lib/types";
 import type { BalanceResult } from "@/lib/portfolio";
-import { relayBase } from "./relay";
 import { fetchUsdPrices } from "./pricing";
+import { relayBase } from "./relay";
 
 const HOST = "api.bitget.com";
+
+const FUTURES_TYPES = ["umcbl", "cmcbl", "dmcbl"] as const;
+type FuturesType = (typeof FUTURES_TYPES)[number];
 
 async function signB64(secret: string, data: string): Promise<string> {
   const key = await crypto.subtle.importKey(
@@ -53,34 +58,79 @@ async function signedGet(
   return json.data;
 }
 
-/** Fetch real Bitget balances: spot + futures (USDT-M, coin-M via pricing). */
-export async function bitgetFetchBalance(account: Account): Promise<BalanceResult> {
-  const cred = account.credentials as Credential | undefined;
-  if (!cred) throw new Error("Missing Bitget credentials");
+export interface SpotRow {
+  coin: string;
+  available: string;
+  frozen: string;
+  locked?: string;
+}
 
-  const spot = (await signedGet(cred, "/api/v2/spot/account/assets").catch(() => [])) as
-    Array<{ coin: string; available: string; frozen: string; locked?: string }>;
-  const umcbl = (await signedGet(cred, "/api/v2/mix/account/accounts", "productType=umcbl").catch(() => [])) as
-    Array<{ coin: string; equity: string; usdtEquity?: string }>;
-  const dmcbl = (await signedGet(cred, "/api/v2/mix/account/accounts", "productType=dmcbl").catch(() => [])) as
-    Array<{ coin: string; equity: string; usdtEquity?: string }>;
+export interface FuturesRow {
+  coin?: string;
+  equity?: string;
+  usdtEquity?: string;
+}
 
-  const assets = [...new Set([...spot, ...umcbl, ...dmcbl].map((a) => a.coin).filter(Boolean))];
-  const prices = await fetchUsdPrices(assets);
-  const priceOf = (c: string) => prices[c] ?? 0;
+export type FuturesByType = Record<FuturesType, FuturesRow[]>;
 
+
+/**
+ * Aggregate Bitget (pure seam): spot USD + futures USD across all product
+ * types. USDT-M / USDC-M use `usdtEquity` (already USDT-converted) with
+ * `equity` fallback; COIN-M multiplies coin equity by its USD price.
+ */
+export function aggregateBitget(
+  spot: SpotRow[],
+  futures: FuturesByType,
+  priceOf: (coin: string) => number
+): { totalValue: number; typeSubtotals: BalanceSubtotal[] } {
   const spotUsd = spot.reduce(
     (s, a) => s + (+a.available + +a.frozen + Number(a.locked ?? 0)) * priceOf(a.coin),
     0
   );
-  const futuresUsd =
-    umcbl.reduce((s, a) => s + Number(a.usdtEquity ?? a.equity ?? 0), 0) +
-    dmcbl.reduce((s, a) => s + +a.equity * priceOf(a.coin), 0);
+  const usd = (rows: FuturesRow[]) =>
+    rows.reduce(
+      (s, a) => s + Number(a.usdtEquity ?? a.equity ?? 0) * (a.usdtEquity ? 1 : priceOf(a.coin ?? "")),
+      0
+    );
+  const coin = (rows: FuturesRow[]) =>
+    rows.reduce((s, a) => s + Number(a.equity ?? 0) * priceOf(a.coin ?? ""), 0);
 
-  const round = (n: number) => Math.round(n * 100) / 100;
-  const subtotals: BalanceSubtotal[] = [
-    { type: "spot", usd: round(spotUsd) },
-    { type: "futures", usd: round(futuresUsd) },
+  const futuresUsd = usd(futures.umcbl) + usd(futures.cmcbl) + coin(futures.dmcbl);
+
+  const typeSubtotals: BalanceSubtotal[] = [
+    { type: "spot", usd: Math.round(spotUsd * 100) / 100 },
+    { type: "futures", usd: Math.round(futuresUsd * 100) / 100 },
   ];
-  return { totalValue: round(spotUsd + futuresUsd), typeSubtotals: subtotals };
+  return {
+    totalValue: Math.round((spotUsd + futuresUsd) * 100) / 100,
+    typeSubtotals,
+  };
+}
+
+/** Fetch real Bitget balances: spot + futures (USDT-M / USDC-M / COIN-M). */
+export async function bitgetFetchBalance(account: Account): Promise<BalanceResult> {
+  const cred = account.credentials as Credential | undefined;
+  if (!cred) throw new Error("Missing Bitget credentials");
+
+  const spot = (await signedGet(cred, "/api/v2/spot/account/assets")) as SpotRow[];
+
+  // Query every futures product type; a failure surfaces (no silent zero).
+  const futures = (await Promise.all(
+    FUTURES_TYPES.map((pt) =>
+      signedGet(cred, "/api/v2/mix/account/accounts", `productType=${pt}`)
+    )
+  )) as unknown as [FuturesRow[], FuturesRow[], FuturesRow[]];
+  const byType: FuturesByType = { umcbl: futures[0], cmcbl: futures[1], dmcbl: futures[2] };
+
+  const assets = [
+    ...new Set([
+      ...spot.map((a) => a.coin),
+      ...Object.values(byType).flatMap((l) => l.map((a) => a.coin ?? "")),
+    ].filter(Boolean)),
+  ];
+  const prices = await fetchUsdPrices(assets);
+  const priceOf = (c: string) => prices[c] ?? 0;
+
+  return aggregateBitget(spot, byType, priceOf);
 }
