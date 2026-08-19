@@ -10,9 +10,11 @@ import { relayBase } from "./relay";
 
 const HOST = "api.bitget.com";
 
-// /api/v2/mix/account/accounts accepts only these productType values
-// (USDC-M "cmcbl" is rejected with 40020 on this endpoint).
-const FUTURES_TYPES = ["umcbl", "dmcbl"] as const;
+// Query every Bitget futures product type (USDT-M / USDC-M / COIN-M).
+// An endpoint or account that doesn't support a type rejects it with
+// 40020 "Parameter productType error" — we skip that type, not the whole
+// account, so whichever types the account has still get counted.
+const FUTURES_TYPES = ["umcbl", "cmcbl", "dmcbl"] as const;
 type FuturesType = (typeof FUTURES_TYPES)[number];
 
 async function signB64(secret: string, data: string): Promise<string> {
@@ -98,7 +100,7 @@ export function aggregateBitget(
   const coin = (rows: FuturesRow[]) =>
     rows.reduce((s, a) => s + Number(a.equity ?? 0) * priceOf(a.coin ?? ""), 0);
 
-  const futuresUsd = usd(futures.umcbl) + coin(futures.dmcbl);
+  const futuresUsd = usd(futures.umcbl) + usd(futures.cmcbl) + coin(futures.dmcbl);
 
   const typeSubtotals: BalanceSubtotal[] = [
     { type: "spot", usd: Math.round(spotUsd * 100) / 100 },
@@ -117,13 +119,19 @@ export async function bitgetFetchBalance(account: Account): Promise<BalanceResul
 
   const spot = (await signedGet(cred, "/api/v2/spot/account/assets")) as SpotRow[];
 
-  // Query every futures product type; a failure surfaces (no silent zero).
-  const futures = (await Promise.all(
-    FUTURES_TYPES.map((pt) =>
-      signedGet(cred, "/api/v2/mix/account/accounts", `productType=${pt}`)
-    )
-  )) as unknown as [FuturesRow[], FuturesRow[], FuturesRow[]];
-  const byType: FuturesByType = { umcbl: futures[0], dmcbl: futures[1] };
+  // Query every futures product type; skip the ones Bitget rejects with a
+  // productType error, surface any other (real) failure.
+  const isProductTypeError = (e: unknown) =>
+    e instanceof Error && (e.message.includes("productType") || e.message.includes("40020"));
+  const byType: FuturesByType = { umcbl: [], cmcbl: [], dmcbl: [] };
+  for (const pt of FUTURES_TYPES) {
+    try {
+      byType[pt] = (await signedGet(cred, "/api/v2/mix/account/accounts", `productType=${pt}`)) as FuturesRow[];
+    } catch (e) {
+      if (isProductTypeError(e)) continue; // unsupported type for this account — skip
+      throw e;
+    }
+  }
 
   const assets = [
     ...new Set([
