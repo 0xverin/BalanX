@@ -5,7 +5,6 @@ import {
   parseTokenAssets,
   parseTotalValue,
   requestPath,
-  signRequest,
 } from "./okx-dex";
 
 // Fixture mirrors the real OnchainOS response shape (from live verification).
@@ -75,24 +74,6 @@ describe("requestPath", () => {
 
   it("passes boolean excludeRiskToken=false when risk tokens should be included (total)", () => {
     expect(requestPath("total", "0xabc", "1", true)).toContain("excludeRiskToken=false");
-  });
-});
-
-describe("signRequest", () => {
-  it("produces the same HMAC-SHA256 signature as node:crypto (cross-implementation check)", async () => {
-    const cred = { apiKey: "k", secretKey: "s3cret", passphrase: "p" };
-    const ts = "2026-08-18T12:00:00.000Z";
-    const method = "GET";
-    const path = "/api/v6/dex/balance/total-value-by-address?address=0xabc&chains=1,56&assetType=0";
-    const got = await signRequest(cred, method, path, ts);
-    // independent implementation
-    const nodeCrypto = await import("node:crypto");
-    const expected = nodeCrypto
-      .createHmac("sha256", cred.secretKey)
-      .update(ts + method + path)
-      .digest("base64");
-    expect(got).toBe(expected);
-    expect(got).not.toBe("");
   });
 });
 

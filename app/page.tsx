@@ -17,21 +17,14 @@ import {
   visibleAccounts,
   type PortfolioState,
 } from "@/lib/portfolio";
-import type {
-  Account,
-  BinanceCredential,
-  ChainId,
-  OkxDexCredential,
-  Platform,
-  Wallet,
-} from "@/lib/types";
+import type { Account, Credential } from "@/lib/types";
 import { loadState, saveState, clearState } from "@/lib/storage";
 import { fetchAccountBalance } from "@/lib/adapters";
 import { msUntilNextUtc8Midnight } from "@/lib/scheduler";
 import { Header } from "@/components/header";
 import { Overview } from "@/components/overview";
 import { AccountCard } from "@/components/account-card";
-import { AddAccountModal } from "@/components/add-account-modal";
+import { AddAccountModal, type AccountDraft } from "@/components/add-account-modal";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { EmptyState } from "@/components/empty-state";
 import { Button, Dropdown } from "@/components/ui";
@@ -125,13 +118,7 @@ function DashboardInner({
 
   const remove = (id: string) => setState((s) => removeAccount(s, id));
 
-  const add = (draft: {
-    name: string;
-    platform: Platform;
-    chains: ChainId[];
-    wallets: Wallet[];
-    credentials: OkxDexCredential | BinanceCredential;
-  }) => {
+  const add = (draft: AccountDraft) => {
     const now = new Date().toISOString();
     const account: Account = {
       id: `acc-${Date.now()}`,
@@ -141,7 +128,7 @@ function DashboardInner({
       lastRefreshed: "",
       chains: draft.chains,
       wallets: draft.wallets,
-      credentials: draft.credentials,
+      ...(draft.credentials ? { credentials: draft.credentials as Credential } : {}),
       totalValue: 0,
     };
     const next = addAccount(state, account);

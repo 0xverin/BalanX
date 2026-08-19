@@ -7,16 +7,38 @@ export interface Wallet {
   chain: ChainId;
 }
 
-export interface OkxDexCredential {
+/** CEX-style credentials (apiKey + secretKey [+ passphrase]). Address-based
+ * platforms (OKX Dex, Hyperliquid) have no credentials — see Credential Source. */
+export interface Credential {
   apiKey: string;
   secretKey: string;
-  passphrase: string;
+  passphrase?: string;
 }
 
-export interface BinanceCredential {
-  apiKey: string;
-  secretKey: string;
-}
+export const PLATFORM_IDS = [
+  "okx-dex",
+  "hyperliquid",
+  "okx-cex",
+  "binance",
+  "bybit",
+  "gate",
+  "bitget",
+  "kucoin",
+  "aster",
+] as const;
+export type Platform = (typeof PLATFORM_IDS)[number];
+
+/** Balance categories across platforms (registry-driven). */
+export type BalanceCategory =
+  | "spot"
+  | "funding"
+  | "margin"
+  | "earn"
+  | "futures"
+  | "unified"
+  | "delivery"
+  | "perps"
+  | "spot-margin";
 
 export interface TokenBalance {
   symbol: string;
@@ -27,15 +49,10 @@ export interface TokenBalance {
   isRiskToken: boolean;
 }
 
-export type BinanceType = "spot" | "funding" | "margin" | "earn" | "futures";
-
-export interface BinanceTypeSubtotal {
-  type: BinanceType;
+export interface BalanceSubtotal {
+  type: BalanceCategory;
   usd: number;
 }
-
-export const PLATFORM_IDS = ["okx-dex", "binance", "gate", "bybit", "bitget"] as const;
-export type Platform = (typeof PLATFORM_IDS)[number];
 
 export interface Account {
   id: string;
@@ -43,22 +60,22 @@ export interface Account {
   platform: Platform;
   createdAt: string; // ISO
   lastRefreshed: string; // ISO
-  // DEX (okx-dex)
+  // address-based platforms (dex / hyperliquid)
   chains?: ChainId[];
   wallets?: Wallet[];
-  tokens?: TokenBalance[]; // per-token USD detail (live from OKX all-token-balances)
-  // CEX (binance)
-  typeSubtotals?: BinanceTypeSubtotal[];
+  tokens?: TokenBalance[]; // per-token USD detail (OKX all-token-balances)
+  // credential-based platforms (cex)
+  typeSubtotals?: BalanceSubtotal[];
   // aggregated USD value, same meaning across platforms
   totalValue: number;
   /** set when the last refresh of this account failed; keeps last value */
   error?: string;
-  /** platform API credentials, stored only in the user's browser (ADR-0001) */
-  credentials?: OkxDexCredential | BinanceCredential;
+  /** CEX credentials, stored only in the user's browser (ADR-0001) */
+  credentials?: Credential;
 }
 
 export interface Snapshot {
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD (UTC+8 calendar day)
   total: number; // total USD across all accounts at that time
   perAccount: Record<string, number>; // accountId -> USD balance at that time
 }

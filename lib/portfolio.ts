@@ -7,7 +7,7 @@
 import { PLATFORM_IDS } from "./types";
 import type {
   Account,
-  BinanceTypeSubtotal,
+  BalanceSubtotal,
   Platform,
   Snapshot,
   TokenBalance,
@@ -27,7 +27,7 @@ export interface PortfolioState {
 export interface BalanceResult {
   totalValue: number;
   tokens?: TokenBalance[];
-  typeSubtotals?: BinanceTypeSubtotal[];
+  typeSubtotals?: BalanceSubtotal[];
   error?: string;
 }
 

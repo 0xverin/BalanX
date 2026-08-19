@@ -5,17 +5,21 @@ import { useT, useI18n, formatUSD, formatUSDRaw, type Dict } from "@/lib/i18n-pr
 import { useNow } from "@/lib/use-now";
 import { platformById } from "@/lib/platforms";
 import { formatRelative, chainShortLabel } from "@/lib/format";
-import type { Account, BinanceType } from "@/lib/types";
+import type { Account, BalanceCategory } from "@/lib/types";
 import { Badge, Button } from "./ui";
 import { PlatformLogo } from "./platform-logo";
 import { ChevronDownIcon, TrashIcon, AlertIcon } from "./icons";
 
-const binanceTypeKey: Record<BinanceType, keyof Dict> = {
+const categoryKey: Record<BalanceCategory, keyof Dict> = {
   spot: "spot",
   funding: "funding",
   margin: "margin",
   earn: "earn",
   futures: "futures",
+  unified: "unified",
+  delivery: "delivery",
+  perps: "perps",
+  "spot-margin": "spotMargin",
 };
 
 export function AccountCard({
@@ -187,7 +191,7 @@ export function AccountCard({
               {(account.typeSubtotals ?? []).map((s) => (
                 <div key={s.type} className="rounded-lg px-2 py-1.5 hover:bg-cardbg">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{t[binanceTypeKey[s.type]] as string}</span>
+                    <span className="font-medium">{t[categoryKey[s.type]] as string}</span>
                     <span className="num font-semibold">${formatUSDRaw(s.usd)}</span>
                   </div>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-line">
@@ -201,7 +205,7 @@ export function AccountCard({
                   </div>
                 </div>
               ))}
-              {account.typeSubtotals?.some((s) => s.type === "futures" && s.usd !== 0) && (
+              {account.typeSubtotals?.some((s) => ["futures", "perps", "unified", "delivery"].includes(s.type) && s.usd !== 0) && (
                 <p className="px-2 pt-1 text-[11px] text-soft">{t.inclUnrealized}</p>
               )}
             </div>
