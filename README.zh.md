@@ -13,7 +13,7 @@
 
 支持查询以下交易所的**总资产（USD）**：
 
-**OKX Dex · Hyperliquid · OKX CEX · Binance · Bybit · Gate · Bitget · KuCoin · Aster**
+**DEX · Hyperliquid · OKX CEX · Binance · Bybit · Gate · Bitget · KuCoin · Aster**
 
 ## 🚀 快速开始
 
@@ -34,4 +34,4 @@ cp .env.example .env.local
 - **所有 key 都不会存储到服务器** —— 只存在你浏览器的 localStorage。
 - 请确保你的 key 只有**只读**功能，没有交易/提现等权限。
 
-> 说明：OKX Dex 的 OnchainOS key 存于你自己配的服务端环境变量（唯一放在服务端的一个），git 已忽略、绝不入库。
+> 说明：DEX 的 OnchainOS key 存于你自己配的服务端环境变量（唯一放在服务端的一个），git 已忽略、绝不入库。

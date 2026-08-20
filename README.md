@@ -13,7 +13,7 @@
 
 Queries the **total assets (USD)** of the following exchanges:
 
-**OKX Dex · Hyperliquid · OKX CEX · Binance · Bybit · Gate · Bitget · KuCoin · Aster**
+**DEX · Hyperliquid · OKX CEX · Binance · Bybit · Gate · Bitget · KuCoin · Aster**
 
 ## 🚀 Quick start
 
@@ -34,4 +34,4 @@ cp .env.example .env.local
 - **All keys are never stored on the server** — they live only in your browser's localStorage.
 - Make sure your exchange API keys have **read-only** permission only — no trading / withdrawal access.
 
-> Note: the OKX Dex OnchainOS key is kept in your own server environment (the one server-side case), git-ignored and never committed.
+> Note: the DEX OnchainOS key is kept in your own server environment (the one server-side case), git-ignored and never committed.
