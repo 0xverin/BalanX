@@ -77,14 +77,8 @@ const en = {
   inclUnrealized: "incl. unrealized PnL",
   emptyTitle: "Track your portfolio across CEX & DEX",
   emptyDesc:
-    "Add your OKX DEX and Binance API credentials to see the real-time USD value of every wallet, in one place. All data stays in your browser.",
+    "Add your exchange accounts to see the total USD value of all your assets, in one page. Your keys stay only in your browser.",
   addFirstAccount: "Add your first account",
-  howOkx: "OKX DEX setup",
-  howOkxDesc:
-    "Create an OnchainOS API key in the OKX developer portal — API Key, Secret Key and Passphrase.",
-  howBinance: "Binance setup",
-  howBinanceDesc:
-    "Create an API key in Binance with Read permission for Spot & Margin, Margin and Futures.",
   confirmDelete: "Delete account?",
   demoNotice: "Your keys stay in your browser — BalanX stores nothing",
 };
@@ -163,12 +157,8 @@ const zh: Record<keyof typeof en, unknown> = {
   inclUnrealized: "含未实现盈亏",
   emptyTitle: "跨 CEX 与 DEX 追踪你的资产",
   emptyDesc:
-    "添加 OKX DEX 与 Binance 的 API 凭据，即可在一个页面看到所有钱包的实时 USD 价值。所有数据仅保存在你的浏览器中。",
+    "添加你的交易所账户，一个页面查看全部资产的 USD 总值。你的 key 只保存在你的浏览器中。",
   addFirstAccount: "添加第一个账户",
-  howOkx: "OKX DEX 配置",
-  howOkxDesc: "在 OKX 开发者平台创建 OnchainOS API Key（API Key + Secret Key + Passphrase）。",
-  howBinance: "Binance 配置",
-  howBinanceDesc: "在 Binance 创建 API Key，并开启现货&杠杆、杠杆、合约的读取权限。",
   confirmDelete: "删除账户？",
   demoNotice: "密钥仅保存在你的浏览器 — BalanX 不存储任何数据",
 };
