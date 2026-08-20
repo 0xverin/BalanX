@@ -30,7 +30,7 @@ export function BalanxLogo({
       </defs>
       <rect width="64" height="64" rx="14" fill={`url(#${grad})`} />
       <g
-        transform="translate(8 10) scale(2.2)"
+        transform="translate(5.6 7.8) scale(2.2)"
         stroke="#ffffff"
         strokeWidth="1.7"
         fill="none"
