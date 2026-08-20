@@ -2,6 +2,7 @@
 
 import { useT, type Lang } from "@/lib/i18n-provider";
 import { GlobeIcon, MoonIcon, SettingsIcon, SunIcon } from "./icons";
+import { BalanxLogo } from "./logo";
 import { Button } from "./ui";
 
 export function Header({
@@ -22,9 +23,7 @@ export function Header({
     <header className="sticky top-0 z-40 border-b border-line glass">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 border border-primary/30">
-            <span className="font-display text-sm font-bold brand-text">B</span>
-          </div>
+          <BalanxLogo size={36} />
           <div className="leading-tight">
             <div className="font-display text-base font-bold tracking-widest">
               BALAN<span className="brand-text">X</span>
