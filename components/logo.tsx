@@ -30,9 +30,9 @@ export function BalanxLogo({
       </defs>
       <rect width="64" height="64" rx="14" fill={`url(#${grad})`} />
       <g
-        transform="translate(20 20) scale(1)"
+        transform="translate(8 10) scale(2.2)"
         stroke="#ffffff"
-        strokeWidth="2.2"
+        strokeWidth="1.7"
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -41,7 +41,7 @@ export function BalanxLogo({
         <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
         <path d="M18 12a2 2 0 0 0 0 4h4v-4" />
       </g>
-      <circle cx="32" cy="30" r="4.6" fill="#fbbf24" />
+      <circle cx="32" cy="31" r="5.8" fill="#fbbf24" />
     </svg>
   );
 }
