@@ -6,7 +6,7 @@ import { PLATFORMS, platformById } from "@/lib/platforms";
 import type { BalanceCategory, ChainId, Credential, Platform, Wallet } from "@/lib/types";
 import { Badge, Button, Dropdown, Field, Input, Modal } from "./ui";
 import { PlatformLogo } from "./platform-logo";
-import { PlusIcon, XIcon } from "./icons";
+import { PlusIcon, XIcon, AlertIcon } from "./icons";
 
 const categoryKey: Record<BalanceCategory, keyof Dict> = {
   spot: "spot",
@@ -238,6 +238,10 @@ export function AddAccountModal({
                   {t[categoryKey[bt]] as string}
                 </Badge>
               ))}
+            </div>
+            <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-300">
+              <AlertIcon size={14} className="mt-0.5 shrink-0" />
+              <span>{t.readOnlyWarn}</span>
             </div>
           </div>
         )}
