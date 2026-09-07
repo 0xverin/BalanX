@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  FETCH_TIMEOUT_MS,
   addAccount,
   appendSnapshot,
   createEmptyState,
-  deltaVsYesterday,
+  deltaVsLastSnapshot,
   deserializeState,
   removeAccount,
   refreshAll,
@@ -78,26 +79,50 @@ describe("visibleAccounts", () => {
   });
 });
 
-describe("deltaVsYesterday", () => {
-  it("is current total minus the previous snapshot total", () => {
+describe("deltaVsLastSnapshot", () => {
+  it("compares the current total against the most recent eligible snapshot", () => {
     const s: PortfolioState = {
       ...createEmptyState(),
-      accounts: [okxAccount()],
-      snapshots: [
-        snap("2026-08-17", 900, { a1: 900 }),
-        snap("2026-08-18", 1000, { a1: 1000 }),
-      ],
+      accounts: [okxAccount({ totalValue: 1100 })],
+      lastRefreshed: "2026-08-18T01:00:00.000Z",
+      snapshots: [snap("2026-08-17", 900), snap("2026-08-18", 1000)],
     };
-    expect(deltaVsYesterday(s)).toBe(100);
+    expect(deltaVsLastSnapshot(s)).toBe(100);
   });
 
-  it("falls back to current total when there is only one snapshot", () => {
+  it("returns null when there is no eligible baseline (show '—' in the UI)", () => {
+    expect(deltaVsLastSnapshot(createEmptyState())).toBeNull();
+    // restored state has no lastRefreshed epoch yet → no point predates the
+    // current balance moment → no baseline until the first refresh
     const s: PortfolioState = {
       ...createEmptyState(),
       accounts: [okxAccount()],
-      snapshots: [snap("2026-08-18", 1000, { a1: 1000 })],
+      snapshots: [snap("2026-08-18", 1000)],
     };
-    expect(deltaVsYesterday(s)).toBe(0);
+    expect(deltaVsLastSnapshot(s)).toBeNull();
+  });
+
+  it("excludes the snapshot just recorded (recorded at/after the balance epoch) — the auto\n  snapshot still compares against the previous point (manual or auto)", () => {
+    const s: PortfolioState = {
+      ...createEmptyState(),
+      accounts: [okxAccount({ totalValue: 1100 })],
+      lastRefreshed: "2026-08-18T16:00:00.000Z",
+      snapshots: [
+        { date: "2026-08-17", at: "2026-08-17T16:00:00.000Z", total: 900, perAccount: {} },
+        { date: "2026-08-18", at: "2026-08-18T16:00:05.000Z", total: 1100, perAccount: {} },
+      ],
+    };
+    expect(deltaVsLastSnapshot(s)).toBe(200); // vs 08-17, not the just-made 18th point
+  });
+
+  it("treats snapshots without `at` (pre-change exports) as eligible baselines", () => {
+    const s: PortfolioState = {
+      ...createEmptyState(),
+      accounts: [okxAccount({ totalValue: 1100 })],
+      lastRefreshed: "2026-08-18T01:00:00.000Z",
+      snapshots: [snap("2026-08-17", 1000)],
+    };
+    expect(deltaVsLastSnapshot(s)).toBe(100);
   });
 });
 
@@ -187,6 +212,24 @@ describe("refreshAll", () => {
     const out = await refreshAll(s, fetch, now);
     expect(out.accounts[0].typeSubtotals?.[0].usd).toBe(700);
   });
+
+  it("times out a hung account after FETCH_TIMEOUT_MS, keeping its last value", async () => {
+    vi.useFakeTimers();
+    try {
+      const s: PortfolioState = {
+        ...createEmptyState(),
+        accounts: [okxAccount({ totalValue: 1000 })],
+      };
+      const hung = () => new Promise<never>(() => {}); // never resolves
+      const p = refreshAll(s, hung, now);
+      await vi.advanceTimersByTimeAsync(FETCH_TIMEOUT_MS);
+      const out = await p;
+      expect(out.accounts[0].totalValue).toBe(1000); // last value kept
+      expect(out.accounts[0].error).toContain("timed out");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe("appendSnapshot", () => {
@@ -202,6 +245,7 @@ describe("appendSnapshot", () => {
     expect(out.snapshots[0].date).toBe("2026-08-18");
     expect(out.snapshots[0].total).toBe(1500);
     expect(out.snapshots[0].perAccount).toEqual({ a1: 1000, b1: 500 });
+    expect(out.snapshots[0].at).toBe("2026-08-18T00:00:00.000Z");
   });
 
   it("replaces the same-day snapshot instead of duplicating", () => {

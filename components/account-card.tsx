@@ -5,7 +5,8 @@ import { useT, useI18n, formatUSD, formatUSDRaw, type Dict } from "@/lib/i18n-pr
 import { useNow } from "@/lib/use-now";
 import { platformById } from "@/lib/platforms";
 import { formatRelative, chainShortLabel } from "@/lib/format";
-import type { Account, BalanceCategory } from "@/lib/types";
+import type { Account, BalanceCategory, TokenBalance } from "@/lib/types";
+import { fetchDexTokenDetail } from "@/lib/adapters/okx-dex";
 import { Badge, Button } from "./ui";
 import { PlatformLogo } from "./platform-logo";
 import { ChevronDownIcon, TrashIcon, AlertIcon } from "./icons";
@@ -36,12 +37,40 @@ export function AccountCard({
   const now = useNow();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  // Lazy DEX token detail (refresh fetches totals only — issue 10). Fetched
+  // once per expand; risk-token filtering stays client-side via filterRiskTokens.
+  // Lazy DEX token detail (refresh fetches totals only — issue 10). Fetched
+  // when the card is expanded; risk-token filtering stays client-side via
+  // filterRiskTokens (no refetch on toggle). Fetched once per account — a
+  // refresh replaces the account object but never changes its id.
+  const [dexTokens, setDexTokens] = useState<TokenBalance[] | null>(null);
+  const [dexLoading, setDexLoading] = useState(false);
+  const [dexError, setDexError] = useState<string | null>(null);
 
   const platform = platformById[account.platform];
   const isDex = platform.kind === "dex";
+
+  const loadDetails = () => {
+    setDexLoading(true);
+    setDexError(null);
+    fetchDexTokenDetail(account)
+      .then((tokens) => setDexTokens(tokens))
+      .catch((e) => setDexError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setDexLoading(false));
+  };
+
+  const toggleDetails = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    if (isDex && dexTokens === null && !dexLoading) loadDetails();
+  };
+
   // hide dust: risk tokens (per setting) and anything worth under $1
   const tokens =
-    account.tokens?.filter(
+    (dexTokens ?? []).filter(
       (tk) => !(filterRiskTokens && tk.isRiskToken) && tk.usd >= 1
     ) ?? [];
   const maxTokenUsd = Math.max(...tokens.map((tk) => tk.usd), 1);
@@ -54,6 +83,7 @@ export function AccountCard({
     const e = account.error ?? "";
     if (e.includes("-2015")) return t.errPermission;
     if (e.includes("429") || /rate limit/i.test(e)) return t.errRateLimit;
+    if (/timed out/i.test(e)) return t.errTimeout;
     return e;
   })();
 
@@ -120,7 +150,7 @@ export function AccountCard({
           <div className="num mt-1 font-display text-2xl font-bold">{formatUSD(account.totalValue)}</div>
         </div>
         <button
-          onClick={() => setOpen(!open)}
+          onClick={toggleDetails}
           className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted transition-colors hover:bg-cardbg hover:text-fg cursor-pointer"
         >
           {open ? t.hideDetails : t.showDetails}
@@ -150,42 +180,51 @@ export function AccountCard({
       {open && (
         <div className="mt-4 border-t border-line pt-4">
           {isDex ? (
-            <div className="space-y-1">
-              <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-2 pb-1 text-[10px] uppercase tracking-wider text-soft">
-                <span>{t.token}</span>
-                <span className="text-right">{t.amount}</span>
-                <span className="text-right">{t.price}</span>
-                <span className="text-right">{t.value}</span>
-                <span className="w-8" />
+            dexLoading ? (
+              <div className="px-2 py-3 text-xs text-soft">{t.loadingDetails}</div>
+            ) : dexError ? (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs break-all text-destructive">
+                <AlertIcon size={13} className="mt-0.5 shrink-0" />
+                <span>{dexError}</span>
               </div>
-              {tokens.map((tk) => (
-                <div
-                  key={tk.symbol + tk.chain}
-                  className={`grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-cardbg ${
-                    tk.isRiskToken ? "opacity-40" : ""
-                  }`}
-                >
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="truncate font-medium">{tk.symbol}</span>
-                    <span className="hidden text-[10px] text-soft sm:inline">
-                      {chainShortLabel(tk.chain)}
-                    </span>
-                  </div>
-                  <span className="num text-right text-xs text-muted">{tk.balance}</span>
-                  <span className="num text-right text-xs text-muted">${tk.price.toFixed(2)}</span>
-                  <span className="num text-right text-sm font-semibold">${formatUSDRaw(tk.usd)}</span>
-                  <div className="h-1.5 w-8 overflow-hidden rounded-full bg-line">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${(tk.usd / maxTokenUsd) * 100}%`,
-                        background: "var(--grad-brand)",
-                      }}
-                    />
-                  </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-3 px-2 pb-1 text-[10px] uppercase tracking-wider text-soft">
+                  <span>{t.token}</span>
+                  <span className="text-right">{t.amount}</span>
+                  <span className="text-right">{t.price}</span>
+                  <span className="text-right">{t.value}</span>
+                  <span className="w-8" />
                 </div>
-              ))}
-            </div>
+                {tokens.map((tk) => (
+                  <div
+                    key={tk.symbol + tk.chain}
+                    className={`grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3 rounded-lg px-2 py-1.5 text-sm hover:bg-cardbg ${
+                      tk.isRiskToken ? "opacity-40" : ""
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="truncate font-medium">{tk.symbol}</span>
+                      <span className="hidden text-[10px] text-soft sm:inline">
+                        {chainShortLabel(tk.chain)}
+                      </span>
+                    </div>
+                    <span className="num text-right text-xs text-muted">{tk.balance}</span>
+                    <span className="num text-right text-xs text-muted">${tk.price.toFixed(2)}</span>
+                    <span className="num text-right text-sm font-semibold">${formatUSDRaw(tk.usd)}</span>
+                    <div className="h-1.5 w-8 overflow-hidden rounded-full bg-line">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${(tk.usd / maxTokenUsd) * 100}%`,
+                          background: "var(--grad-brand)",
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           ) : (
             <div className="space-y-1.5">
               {(account.typeSubtotals ?? []).map((s) => (

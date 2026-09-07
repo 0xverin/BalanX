@@ -6,7 +6,7 @@ export type Lang = "en" | "zh";
 const en = {
   tagline: "Cross-exchange balance monitor",
   totalAssets: "Total Assets",
-  vsYesterday: "vs yesterday",
+  vsLastSnapshot: "vs last snapshot",
   refresh: "Refresh",
   refreshing: "Refreshing…",
   lastRefreshed: "Last refreshed",
@@ -19,6 +19,7 @@ const en = {
   delete: "Delete",
   showDetails: "Show details",
   hideDetails: "Hide details",
+  loadingDetails: "Loading details…",
   totalValue: "Total value",
   wallets: (n: number) => `${n} wallet${n > 1 ? "s" : ""}`,
   platform: "Platform",
@@ -75,6 +76,7 @@ const en = {
   errPermission:
     "Insufficient API permissions — enable Spot & Margin, Margin and Futures on your key",
   errRateLimit: "Rate limited by the exchange — try again in a moment",
+  errTimeout: "Refresh timed out — showing last known balance",
   inclUnrealized: "incl. unrealized PnL",
   emptyTitle: "Track your portfolio across CEX & DEX",
   emptyDesc:
@@ -87,7 +89,7 @@ const en = {
 const zh: Record<keyof typeof en, unknown> = {
   tagline: "跨交易所余额监控",
   totalAssets: "总资产",
-  vsYesterday: "较昨日",
+  vsLastSnapshot: "较上次快照",
   refresh: "刷新",
   refreshing: "刷新中…",
   lastRefreshed: "上次刷新",
@@ -100,6 +102,7 @@ const zh: Record<keyof typeof en, unknown> = {
   delete: "删除",
   showDetails: "查看明细",
   hideDetails: "收起",
+  loadingDetails: "加载明细…",
   totalValue: "总价值",
   wallets: (n: number) => `${n} 个钱包`,
   platform: "平台",
@@ -156,6 +159,7 @@ const zh: Record<keyof typeof en, unknown> = {
   errPermission:
     "API 权限不足 — 请在 key 上开启现货&杠杆、杠杆、合约的读取权限",
   errRateLimit: "交易所限流 — 请稍后重试",
+  errTimeout: "刷新超时 — 显示上次余额",
   inclUnrealized: "含未实现盈亏",
   emptyTitle: "跨 CEX 与 DEX 追踪你的资产",
   emptyDesc:

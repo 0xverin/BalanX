@@ -16,6 +16,9 @@ import { utc8Date } from "./scheduler";
 
 export type PlatformFilter = "all" | Platform;
 
+/** Per-account fetch timeout — a stuck exchange must not stall the whole refresh. */
+export const FETCH_TIMEOUT_MS = 10_000;
+
 export interface PortfolioState {
   accounts: Account[];
   snapshots: Snapshot[];
@@ -76,10 +79,27 @@ export function visibleAccounts(s: PortfolioState): Account[] {
     : s.accounts.filter((a) => a.platform === s.filter);
 }
 
-/** Total value change vs the previous snapshot (0 when no baseline). */
-export function deltaVsYesterday(s: PortfolioState): number {
-  const yesterday = s.snapshots[s.snapshots.length - 2]?.total ?? totalValue(s);
-  return totalValue(s) - yesterday;
+/**
+ * The snapshot the "较上次" comparison is measured against: the most recent
+ * point recorded BEFORE the current balance epoch (`lastRefreshed`). A
+ * snapshot made at/after the current numbers were fetched is "the point just
+ * recorded", not a baseline — so right after an auto snapshot the comparison
+ * still lands on the previous point (manual or auto), per the user's spec.
+ * Snapshots without `at` (pre-change exports) are treated as eligible.
+ * Returns null when no baseline exists → UI shows "—".
+ */
+export function lastSnapshotBaseline(s: PortfolioState): Snapshot | null {
+  const ts = s.lastRefreshed;
+  for (let i = s.snapshots.length - 1; i >= 0; i--) {
+    if ((s.snapshots[i].at ?? "") < ts) return s.snapshots[i];
+  }
+  return null;
+}
+
+/** Change vs the baseline snapshot; null when no baseline exists (UI shows "—"). */
+export function deltaVsLastSnapshot(s: PortfolioState): number | null {
+  const baseline = lastSnapshotBaseline(s);
+  return baseline === null ? null : totalValue(s) - baseline.total;
 }
 
 export function addAccount(s: PortfolioState, account: Account): PortfolioState {
@@ -113,7 +133,18 @@ export async function refreshAll(
   const results = await Promise.all(
     s.accounts.map(async (a) => {
       try {
-        const r = await fetch(a, opts);
+        // Per-account timeout: a hung exchange fetch must not stall the whole
+        // refresh (keeps last value + error marker). The orphaned request is
+        // discarded when the race fires — acceptable for read-only stats.
+        const r = await Promise.race([
+          fetch(a, opts),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () => reject(new Error(`Refresh timed out after ${FETCH_TIMEOUT_MS / 1000}s`)),
+              FETCH_TIMEOUT_MS
+            )
+          ),
+        ]);
         const next: Account = {
           ...a,
           totalValue: r.totalValue,
@@ -142,6 +173,7 @@ export function appendSnapshot(
   const date = utc8Date(now());
   const snap: Snapshot = {
     date,
+    at: now().toISOString(),
     total: totalValue(s),
     perAccount: Object.fromEntries(s.accounts.map((a) => [a.id, a.totalValue])),
   };

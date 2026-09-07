@@ -1,7 +1,8 @@
 // OKX Dex (OnchainOS Balance API) adapter.
 // The OnchainOS key lives in server env vars (ADR-0003); requests go through
 // the stateless relay which signs server-side. Browser never sees the key.
-// Verified live: total ≈ $20.6k for the test wallet.
+// Refresh fetches the USD total only — the per-token detail is fetched lazily
+// when the account card expands (fetchDexTokenDetail), keeping refreshes fast.
 
 import type { Account, TokenBalance } from "@/lib/types";
 import type { BalanceResult, FetchOptions } from "@/lib/portfolio";
@@ -104,7 +105,8 @@ async function relayGet(path: string): Promise<unknown> {
   return json;
 }
 
-/** Fetch the real USD total and per-token detail for a DEX account (via relay). */
+/** Fetch the real USD total across all wallets of a DEX account (via relay).
+ * Token-level detail is NOT fetched here — see fetchDexTokenDetail. */
 export async function okxFetchBalance(
   account: Account,
   opts?: FetchOptions
@@ -122,10 +124,21 @@ export async function okxFetchBalance(
     0
   );
 
-  const tokenLists = await Promise.all(
-    wallets.map((w) => relayGet(requestPath("tokens", w.address, chains, includeRisk)))
-  );
-  const tokens = mergeTokenLists(tokenLists.map((j) => parseTokenAssets(j as never)));
+  return { totalValue };
+}
 
-  return { totalValue, tokens };
+/**
+ * Lazy per-token detail for a DEX account (called on card expand). Fetches
+ * ALL tokens (risk tokens included) so risk-token filtering stays client-side
+ * and toggling it never needs a refetch.
+ */
+export async function fetchDexTokenDetail(account: Account): Promise<TokenBalance[]> {
+  const wallets = account.wallets ?? [];
+  if (wallets.length === 0) throw new Error("No wallets on this account");
+
+  const chains = chainsParam(account.chains);
+  const tokenLists = await Promise.all(
+    wallets.map((w) => relayGet(requestPath("tokens", w.address, chains, true)))
+  );
+  return mergeTokenLists(tokenLists.map((j) => parseTokenAssets(j as never)));
 }

@@ -23,3 +23,15 @@ export function formatRelative(
 export function chainShortLabel(chain: "eth" | "bsc"): string {
   return chain === "eth" ? "ETH" : "BSC";
 }
+
+/**
+ * UTC+8 wall-clock timestamp "YYYY-MM-DD HH:mm" — snapshot labels are
+ * UTC+8-centric (the whole product's day boundary is UTC+8 midnight).
+ */
+export function formatUtc8DateTime(iso: string): string {
+  const d = new Date(new Date(iso).getTime() + 8 * 3600_000);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(
+    d.getUTCHours()
+  )}:${p(d.getUTCMinutes())}`;
+}

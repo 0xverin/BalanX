@@ -35,7 +35,7 @@ describe("isAllowedSigned", () => {
       ["gate", "api.gateio.ws", "/api/v4/futures/usdt/accounts"],
       ["bitget", "api.bitget.com", "/api/v2/spot/account/assets"],
       ["bitget", "api.bitget.com", "/api/v2/mix/account/accounts"],
-      ["bitget", "api.bitget.com", "/api/v2/spot/market/ticker"],
+      ["bitget", "api.bitget.com", "/api/v2/spot/market/tickers"],
       ["kucoin", "api.kucoin.com", "/api/v2/accounts"],
       ["kucoin", "api.kucoin.com", "/api/v1/margin/account"],
     ];

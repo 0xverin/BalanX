@@ -12,6 +12,7 @@ import { Button } from "./ui";
 export function Overview({
   total,
   delta,
+  baselineLabel,
   snapshots,
   refreshing,
   lastRefreshed,
@@ -19,7 +20,8 @@ export function Overview({
   onSnapshot,
 }: {
   total: number;
-  delta: number; // vs yesterday, USD
+  delta: number | null; // vs last snapshot, USD; null → no baseline yet
+  baselineLabel: string | null; // "YYYY-MM-DD HH:mm" of the baseline snapshot
   snapshots: Snapshot[];
   refreshing: boolean;
   lastRefreshed: string;
@@ -29,7 +31,7 @@ export function Overview({
   const t = useT();
   const { lang } = useI18n();
   const now = useNow();
-  const up = delta >= 0;
+  const up = (delta ?? 0) >= 0;
 
   const rel = useMemo(
     () => formatRelative(lastRefreshed, now, lang, t),
@@ -48,13 +50,20 @@ export function Overview({
               <span className="font-display text-4xl font-bold brand-text sm:text-5xl">
                 {formatUSD(total)}
               </span>
-              <span
-                className={`num text-sm font-semibold ${
-                  up ? "text-success" : "text-destructive"
-                }`}
-              >
-                {up ? "▲" : "▼"} {formatUSD(Math.abs(delta))} {t.vsYesterday}
-              </span>
+              {delta !== null ? (
+                <span
+                  className={`num text-sm font-semibold ${
+                    up ? "text-success" : "text-destructive"
+                  }`}
+                >
+                  {up ? "▲" : "▼"} {formatUSD(Math.abs(delta))} {t.vsLastSnapshot}
+                  {baselineLabel ? ` · ${baselineLabel}` : ""}
+                </span>
+              ) : (
+                <span className="num text-sm font-semibold text-soft">
+                  {t.vsLastSnapshot} · —
+                </span>
+              )}
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-soft">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />

@@ -76,6 +76,8 @@ export interface Account {
 
 export interface Snapshot {
   date: string; // YYYY-MM-DD (UTC+8 calendar day)
+  /** recording moment (ISO). Absent in pre-v3 exports — treated as eligible baseline. */
+  at?: string;
   total: number; // total USD across all accounts at that time
   perAccount: Record<string, number>; // accountId -> USD balance at that time
 }
