@@ -35,3 +35,12 @@ export function formatUtc8DateTime(iso: string): string {
     d.getUTCHours()
   )}:${p(d.getUTCMinutes())}`;
 }
+
+/**
+ * Minute-precise label for a snapshot: the recorded moment when known, else
+ * the date's UTC+8 midnight — auto snapshots ARE recorded at 24:00, so this
+ * is exact for them and the best approximation for pre-`at` exports.
+ */
+export function formatSnapshotTime(date: string, at?: string): string {
+  return at ? formatUtc8DateTime(at) : `${date} 00:00`;
+}

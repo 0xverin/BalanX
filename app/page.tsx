@@ -22,7 +22,7 @@ import type { Account, Credential } from "@/lib/types";
 import { loadState, saveState, clearState } from "@/lib/storage";
 import { fetchAccountBalance } from "@/lib/adapters";
 import { msUntilNextUtc8Midnight } from "@/lib/scheduler";
-import { formatUtc8DateTime } from "@/lib/format";
+import { formatSnapshotTime } from "@/lib/format";
 import { Header } from "@/components/header";
 import { Overview } from "@/components/overview";
 import { AccountCard } from "@/components/account-card";
@@ -89,11 +89,7 @@ function DashboardInner({
   const total = totalValue(state);
   const baseline = lastSnapshotBaseline(state);
   const delta = deltaVsLastSnapshot(state);
-  const baselineLabel = baseline
-    ? baseline.at
-      ? formatUtc8DateTime(baseline.at)
-      : baseline.date // pre-change exports have no recorded moment — show the date
-    : null;
+  const baselineLabel = baseline ? formatSnapshotTime(baseline.date, baseline.at) : null;
   const visible = visibleAccounts(state);
   const stateRef = useRef(state);
 
