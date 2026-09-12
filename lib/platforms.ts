@@ -97,7 +97,7 @@ export const PLATFORMS: PlatformMeta[] = [
     status: "supported",
     credentialFields: ["apiKey", "secretKey"],
     needsAddress: false,
-    balanceTypes: ["spot", "spot-margin", "futures", "delivery"],
+    balanceTypes: ["spot", "spot-margin", "futures", "delivery", "earn"],
   },
   {
     id: "bitget",

@@ -31,8 +31,7 @@ describe("isAllowedSigned", () => {
     const ok: Array<[Exclude<RelayPlatform, "okx-dex">, string, string]> = [
       ["binance", "api.binance.com", "/api/v3/account"],
       ["binance", "fapi.binance.com", "/fapi/v2/balance"],
-      ["gate", "api.gateio.ws", "/api/v4/spot/accounts"],
-      ["gate", "api.gateio.ws", "/api/v4/futures/usdt/accounts"],
+      ["gate", "api.gateio.ws", "/api/v4/wallet/total_balance"],
       ["bitget", "api.bitget.com", "/api/v2/spot/account/assets"],
       ["bitget", "api.bitget.com", "/api/v2/mix/account/accounts"],
       ["bitget", "api.bitget.com", "/api/v2/spot/market/tickers"],

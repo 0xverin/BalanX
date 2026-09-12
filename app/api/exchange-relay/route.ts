@@ -30,10 +30,8 @@ const RELAY = {
   gate: {
     hosts: ["api.gateio.ws"],
     paths: [
-      "/api/v4/spot/accounts",
-      "/api/v4/spot/margin_accounts",
-      "/api/v4/futures/usdt/accounts",
-      "/api/v4/futures/delivery/accounts",
+      // one USDT-valued call covering every wallet (spot/margin/futures/…)
+      "/api/v4/wallet/total_balance",
     ],
   },
   bitget: {
